@@ -1,0 +1,44 @@
+{
+  "name": "nguyenhiep/baokim-va-client",
+  "description": "implement baokim va api",
+  "keywords": [
+    "baokim",
+    "va",
+    "client"
+  ],
+  "type": "library",
+  "require": {
+    "spatie/laravel-package-tools": "dev-master",
+    "guzzlehttp/guzzle": "^7.3",
+    "myclabs/php-enum": "dev-master",
+    "ext-openssl": "*"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Nguyenhiep\\BaoKimVaClient\\": "src/"
+    },
+    "files": [
+      "src/helper.php"
+    ]
+  },
+  "authors": [
+    {
+      "name": "Nguyễn Văn Hiệp",
+      "email": "Nguyenhiepvan.bka@gmail.com",
+      "role": "Developer"
+    }
+  ],
+  "config": {
+    "sort-packages": true
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Nguyenhiep\\BaoKimVaClient\\BaoKimVaClientServiceProvider"
+      ]
+    }
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev"
+}
