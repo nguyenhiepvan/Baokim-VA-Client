@@ -36,21 +36,21 @@ class RSA
 
     public function encrypt($data)
     {
-        if (openssl_public_encrypt($data, $encrypted, $this->pubkey))
+        if (openssl_public_encrypt($data, $encrypted, $this->pubkey)) {
             $data = base64_encode($encrypted);
-        else
+        } else {
             throw new EncryptFailedException('Unable to encrypt data. Perhaps it is bigger than the key size?');
-
+        }
         return $data;
     }
 
     public function decrypt($data)
     {
-        if (openssl_private_decrypt(base64_decode($data), $decrypted, $this->privkey))
+        if (openssl_private_decrypt(base64_decode($data), $decrypted, $this->privkey)) {
             $data = $decrypted;
-        else
+        } else {
             $data = '';
-
+        }
         return $data;
     }
 }

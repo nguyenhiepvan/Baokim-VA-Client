@@ -38,7 +38,7 @@ class Base
 
     protected function makeSignature(array $data)
     {
-        return base64_encode($this->encrypter->encrypt(implode("|", $data)));
+        return $this->encrypter->encrypt(implode("|", $data));
     }
 
     protected function makeClient($signature, $mode = "dev"): Client
@@ -46,11 +46,10 @@ class Base
         $url = isset($this->{"url_$mode"}) ? $this->{"url_$mode"} : $this->url_dev;
         return new Client([
             'headers'  => [
-                'Accept'    => 'application/json',
-                'Signature' => $signature,
+                'Content-Type' => "application/json",
+                'Signature'    => $signature,
             ],
-            'base_uri' => $url,
-            'verify'   => false,
+            'base_uri' => $url
         ]);
     }
 }

@@ -9,13 +9,17 @@
 namespace Nguyenhiep\BaoKimVaClient\Client;
 
 
+use GuzzleHttp\Exception\GuzzleException;
+use Nguyenhiep\BaoKimVaClient\Enum\CollectionResponseCode;
+use Nguyenhiep\BaoKimVaClient\Exceptions\CollectionRequestException;
+
 class CollectionPayment extends Base
 {
-    public function __construct($private_key, $public_key)
+    public function __construct($private_key = null, $public_key = null)
     {
-        parent::__construct($private_key, $public_key);
-        $this->url_dev  = config("baokim-va-client.url.development");
-        $this->url_prod = config("baokim-va-client.url.production");
+        parent::__construct($private_key ?? config("baokim-va-client.keys.private"), $public_key ?? config("baokim-va-client.keys.public"));
+        $this->url_dev  = config("baokim-va-client.urls.development");
+        $this->url_prod = config("baokim-va-client.urls.production");
     }
 
     /**
@@ -23,23 +27,29 @@ class CollectionPayment extends Base
      * BAOKIM will check the data format and signature authentication
      * If the information is correct, BAOKIM will cancel pending cash transfer transaction and return response to PARTNER.
      *
-     * @param string $request_id Unique code , recomment format: PartnerCode + BK + YYYYMMDD + UniqueId.
-     * @param string $request_time Time send the request from PARTNER , format: YYYY-MM-DD HH:MM:SS.
-     * @param string $partner_code Unique code BAOKIM provide
-     * @param int $operation Fix: 9001
-     * @param int $create_type Note: BK won't check this field, can send 2
      * @param string $acc_name The name of Account holder (name of USER)
+     * @param string $order_id Unique id for each VA
      * @param int $collection_amount_min Require  Min collect amount (Min 50.000 vnd)
      * @param int $collection_amount_max Require  Max collect amount (Max 50.000.000vnd)
-     * @param string $order_id Unique id for each VA
+     * @param int $create_type Note: BK won't check this field, can send 2
+     * @param int $operation Fix: 9001
+     * @param string|null $request_time Time send the request from PARTNER , format: YYYY-MM-DD HH:MM:SS.
+     * @param string|null $request_id Unique code , recomment format: PartnerCode + BK + YYYYMMDD + UniqueId.
+     * @param string|null $partner_code Unique code BAOKIM provide
      * @param string|null $acc_no VA number (Max 17 characters).Note: BK won't check this field, can send NULL
      * @param string|null $expire_date Expire date. Format: YYYYMM-DD HH:II:SS
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function register_virtual_account(string $request_id, string $request_time, string $partner_code, int $operation,
-                                             int $create_type, string $acc_name, int $collection_amount_min, int $collection_amount_max,
-                                             string $order_id, string $acc_no = null, string $expire_date = null
+    public function register_virtual_account(
+        string $acc_name, string $order_id, int $collection_amount_min = 50000, int $collection_amount_max = 50000000,
+        int $create_type = 2, int $operation = 9001, string $request_time = null, string $request_id = null,
+        string $partner_code = null, string $acc_no = null, string $expire_date = null
     )
     {
+        $partner_code = $partner_code ?? config("baokim-va-client.partner_code");
+        $request_id   = "{$partner_code}BK" . date("Ymd") . ($request_id ?? rand());
+        $request_time = $request_time ?? date("Y-m-d H:i:s");
+
         $data      = [
             "RequestId"        => $request_id,
             "RequestTime"      => $request_time,
@@ -55,7 +65,16 @@ class CollectionPayment extends Base
         ];
         $signature = $this->makeSignature($data);
         $client    = $this->makeClient($signature);
-        $response  = $client->post("", ["json" => $data]);
+        try {
+            $response_txt = ($client->post("", ["json" => $data]))->getBody()->getContents();
+            $response     = json_decode($response_txt, true);
+            if ($response["ResponseCode"] != CollectionResponseCode::SUCCESSFUL) {
+                throw new CollectionRequestException($response["ResponseMessage"], $response["ResponseCode"]);
+            }
+            return $response;
+        } catch (GuzzleException $exception) {
+            dd($exception);
+        }
     }
 
     /**
