@@ -9,7 +9,9 @@
 namespace Nguyenhiep\BaoKimVaClient\Services;
 
 
-use Nguyenhiep\BaoKimVaClient\Exceptions\EncryptFailedException;
+use Nguyenhiep\BaoKimVaClient\Exceptions\InvalidSignatureException;
+use Nguyenhiep\BaoKimVaClient\Exceptions\KeyNotFoundException;
+use Nguyenhiep\BaoKimVaClient\Exceptions\SignFailedException;
 
 class RSA
 {
@@ -25,32 +27,49 @@ class RSA
 
     /**
      * RSA constructor.
-     * @param $privkey string
-     * @param $pubkey string
+     * @param $privkey
+     * @param $pubkey
+     * @throws KeyNotFoundException
      */
     public function __construct($privkey, $pubkey)
     {
         $this->privkey = $privkey;
         $this->pubkey  = $pubkey;
+        if (!$this->pubkey) {
+            throw new KeyNotFoundException("No public key found");
+        }
+        if (!$this->privkey) {
+            throw new KeyNotFoundException("No private key found");
+        }
     }
 
-    public function encrypt($data)
+    /**
+     * @param $data
+     * @return string
+     * @throws SignFailedException
+     */
+    public function sign($data)
     {
-        if (openssl_public_encrypt($data, $encrypted, $this->pubkey)) {
-            $data = base64_encode($encrypted);
-        } else {
-            throw new EncryptFailedException('Unable to encrypt data. Perhaps it is bigger than the key size?');
+        if (openssl_sign($data, $encrypted, $this->privkey, OPENSSL_ALGO_SHA1)) {
+            return base64_encode($encrypted);
         }
-        return $data;
+        throw new SignFailedException('can not sign data');
     }
 
-    public function decrypt($data)
+    /**
+     * @param $data
+     * @return string
+     */
+    public function verify($data, $signature)
     {
-        if (openssl_private_decrypt(base64_decode($data), $decrypted, $this->privkey)) {
-            $data = $decrypted;
-        } else {
-            $data = '';
+        $ok = openssl_verify($data, $signature, $this->pubkey, OPENSSL_ALGO_SHA1);
+        switch ($ok) {
+            case 1:
+                return true;
+            case 0:
+                return false;
+            default:
+                throw new InvalidSignatureException("error checking signature");
         }
-        return $data;
     }
 }

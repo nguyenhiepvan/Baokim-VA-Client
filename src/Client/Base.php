@@ -36,11 +36,31 @@ class Base
         $this->encrypter = new RSA($private_key, $public_key);
     }
 
-    protected function makeSignature(array $data)
+    /**
+     * @param array $data data will be signed
+     * @param string $separator
+     * @param null $structure structure of signature
+     * @return string signature
+     * @throws \Nguyenhiep\BaoKimVaClient\Exceptions\SignFailedException
+     */
+    protected function makeSignature(array $data, string $separator = "|", $structure = null)
     {
-        return $this->encrypter->encrypt(implode("|", $data));
+        if ($structure) {
+            $data = array_filter($data, function ($k) use ($structure) {
+                return in_array($k, explode("|", $structure));
+            }, ARRAY_FILTER_USE_KEY);
+        }
+        if ($separator == "json") {
+            return $this->encrypter->sign(json_encode($data));
+        }
+        return $this->encrypter->sign(implode($separator, $data));
     }
 
+    /**
+     * @param $signature
+     * @param string $mode dev|production
+     * @return Client
+     */
     protected function makeClient($signature, $mode = "dev"): Client
     {
         $url = isset($this->{"url_$mode"}) ? $this->{"url_$mode"} : $this->url_dev;

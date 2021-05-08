@@ -35,6 +35,11 @@ if (!function_exists('config')) {
     }
 }
 
+/**
+ * random string
+ * @param int $length
+ * @return string
+ */
 function generateRandomString($length = 10) {
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $charactersLength = strlen($characters);

@@ -9,7 +9,7 @@
 namespace Nguyenhiep\BaoKimVaClient\Exceptions;
 
 
-class EncryptFailedException extends \Exception
+class SignFailedException extends \Exception
 {
 
 }

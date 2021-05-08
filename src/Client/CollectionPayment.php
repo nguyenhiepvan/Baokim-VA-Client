@@ -38,7 +38,10 @@ class CollectionPayment extends Base
      * @param string|null $partner_code Unique code BAOKIM provide
      * @param string|null $acc_no VA number (Max 17 characters).Note: BK won't check this field, can send NULL
      * @param string|null $expire_date Expire date. Format: YYYYMM-DD HH:II:SS
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return mixed
+     * @throws CollectionRequestException
+     * @throws GuzzleException
+     * @throws \Nguyenhiep\BaoKimVaClient\Exceptions\SignFailedException
      */
     public function register_virtual_account(
         string $acc_name, string $order_id, int $collection_amount_min = 50000, int $collection_amount_max = 50000000,
@@ -63,18 +66,14 @@ class CollectionPayment extends Base
             "OrderId"          => $order_id,
             "AccNo"            => $acc_no
         ];
-        $signature = $this->makeSignature($data);
+        $signature = $this->makeSignature($data,"json");
         $client    = $this->makeClient($signature);
-        try {
-            $response_txt = ($client->post("", ["json" => $data]))->getBody()->getContents();
-            $response     = json_decode($response_txt, true);
-            if ($response["ResponseCode"] != CollectionResponseCode::SUCCESSFUL) {
-                throw new CollectionRequestException($response["ResponseMessage"], $response["ResponseCode"]);
-            }
-            return $response;
-        } catch (GuzzleException $exception) {
-            dd($exception);
+        $response_txt = ($client->post("", ["json" => $data]))->getBody()->getContents();
+        $response     = json_decode($response_txt, true);
+        if ($response["ResponseCode"] != CollectionResponseCode::SUCCESSFUL) {
+            throw new CollectionRequestException($response["ResponseMessage"], $response["ResponseCode"]);
         }
+        return $response;
     }
 
     /**
