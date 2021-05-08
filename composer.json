@@ -8,7 +8,7 @@
   ],
   "type": "library",
   "require": {
-    "spatie/laravel-package-tools": "dev-master",
+    "spatie/laravel-package-tools": "1.6.3",
     "guzzlehttp/guzzle": "^7.0",
     "myclabs/php-enum": "1.7.7",
     "ext-openssl": "*"
