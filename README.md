@@ -6,7 +6,7 @@ Add the following into your config part of your composer.json file:
 "repositories": [
 {
 "type": "vcs",
-"url": "git@gitlab.com:colombo-group/baokim-va-client.git"
+"url": "git@github.com:nguyenhiepvan/Baokim-VA-Client.git"
 }
 ```
 
